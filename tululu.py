@@ -18,13 +18,13 @@ def parse_book_page(url):
     check_for_redirect(page_response)
     
     soup = BeautifulSoup(page_response.text, "lxml")
-    about_book = soup.find('td', class_='ow_px_td').find("h1").text
-    raw_title, raw_author = about_book.split(sep='::')
+    about_book = soup.find("td", class_="ow_px_td").find("h1").text
+    raw_title, raw_author = about_book.split(sep="::")
 
     title = raw_title.strip()
     author = raw_author.strip()
     
-    rel_url = soup.find("div", class_="bookimage").find("img")['src']
+    rel_url = soup.find("div", class_="bookimage").find("img")["src"]
     img_url = urljoin(url, rel_url)
 
     raw_comments = soup.find_all("div", class_="texts")
@@ -58,7 +58,7 @@ def check_for_redirect(response):
         return True
 
 
-def download_txt(url, filename, folder='books/'):
+def download_txt(url, filename, folder="books/"):
     """Скачиваем текстовые файлы.
     Args:
         url (str): Cсылка на текст, который хочется скачать.
@@ -80,14 +80,14 @@ def download_txt(url, filename, folder='books/'):
         return full_path
     
 
-def download_image(url, folder='images/'):
+def download_image(url, folder="images/"):
     """
     Скачиваем изображения обложек книг
     """
 
     valid_folder = sanitize_filepath(folder)
     Path(valid_folder).mkdir(exist_ok=True)
-    img_filename = url.split('/')[-1]
+    img_filename = url.split("/")[-1]
     valid_filename = sanitize_filename(f"{img_filename}")
     full_path = os.path.join(valid_folder, valid_filename)
     if not Path(full_path).exists():
@@ -98,7 +98,7 @@ def download_image(url, folder='images/'):
     return full_path
 
 
-def save_comments(filename, comments, folder='comments/'):
+def save_comments(filename, comments, folder="comments/"):
     """
     Сохраняем комментарии в файл
     """
@@ -114,7 +114,7 @@ def save_comments(filename, comments, folder='comments/'):
     return full_path
 
 
-def save_genres(filename, genres, folder='genres/'):
+def save_genres(filename, genres, folder="genres/"):
     """
     Сохраняем список жанров книги в файл
     """
