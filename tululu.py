@@ -75,7 +75,7 @@ def download_txt(url, filename, folder='books/'):
         Path(valid_folder).mkdir(exist_ok=True)
         valid_filename = sanitize_filename(filename)+".txt"
         full_path = os.path.join(valid_folder, valid_filename)
-        with open(full_path, "w") as file:
+        with open(full_path, "w", encoding="utf-8") as file:
             file.write(response.text)
         return full_path
     
