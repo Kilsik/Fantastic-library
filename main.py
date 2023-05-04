@@ -70,17 +70,28 @@ def main():
         stripped_title = title.strip()
         stripped_author = author.strip()
         filename = f"{id}. {stripped_title}"
-        try:
-            book_name = download_txt(url, filename)
-        except requests.HTTPError:
-            continue
+        # try:
+        #     book_name = download_txt(url, filename)
+        # except requests.HTTPError:
+        #     continue
         rel_url = soup.find("div", class_="bookimage").find("img")['src']
         img_url = urljoin(page_url, rel_url)
         img_filename = rel_url.split('/')[-1]
-        book_cover = download_image(img_url, img_filename)
-        print(book_name)
-        print(book_cover)
-        
+        # book_cover = download_image(img_url, img_filename)
+        comments = soup.find_all("div", class_="texts")
+        comments_text = []
+        for comment in comments:
+            comment_text = comment.find("span", class_="black").text
+            comments_text.append(comment_text)
+            print(comment_text)
+        Path("comments").mkdir(exist_ok=True)
+        comm_file_name = f"{id}. comments.txt"
+        comments_name = os.path.join("comments", comm_file_name)
+        if comments_text:
+            with open(comments_name, "w") as file:
+                file.writelines(comments_text)
+        print(filename)
+
 
 if __name__ == "__main__":
     main()
