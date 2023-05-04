@@ -154,3 +154,5 @@ cython_debug/
 books/
 images/
 comments/
+genres/
+

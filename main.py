@@ -7,8 +7,50 @@ from pathvalidate import sanitize_filepath, sanitize_filename
 from urllib.parse import urljoin
 
 
+def parse_book_page(url):
+    """
+    Собираем информацию о книге
+    """
+
+    page_response = requests.get(url)
+    page_response.raise_for_status()
+    check_for_redirect(page_response)
+    
+    soup = BeautifulSoup(page_response.text, "lxml")
+    about_book = soup.find('td', class_='ow_px_td').find("h1").text
+    raw_title, raw_author = about_book.split(sep='::')
+
+    title = raw_title.strip()
+    author = raw_author.strip()
+    
+    rel_url = soup.find("div", class_="bookimage").find("img")['src']
+    img_url = urljoin(url, rel_url)
+
+    raw_comments = soup.find_all("div", class_="texts")
+    comments = []
+    for comment in raw_comments:
+        comment_text = comment.find("span", class_="black").text
+        comments.append(comment_text)
+    
+    raw_genres = soup.find("span", class_="d_book").find_all("a")
+    genres = []
+    for genre in raw_genres:
+        genres.append(genre.text)
+
+    return {
+        "title": title,
+        "author": author,
+        "cover_url": img_url,
+        "comments": comments,
+        "genres": genres
+    }
+
+
 def check_for_redirect(response):
-    """ Check the availability of the book """
+    """
+    Проверяем наличие книги
+    """
+
     if response.history:
         raise requests.HTTPError()
     else:
@@ -16,7 +58,7 @@ def check_for_redirect(response):
 
 
 def download_txt(url, filename, folder='books/'):
-    """Функция для скачивания текстовых файлов.
+    """Скачиваем текстовые файлы.
     Args:
         url (str): Cсылка на текст, который хочется скачать.
         filename (str): Имя файла, с которым сохранять.
@@ -37,14 +79,15 @@ def download_txt(url, filename, folder='books/'):
         return full_path
     
 
-def download_image(url, filename, folder='images/'):
+def download_image(url, folder='images/'):
     """
-    Функция для скачивания изображений обложек книг
+    Скачиваем изображения обложек книг
     """
 
     valid_folder = sanitize_filepath(folder)
     Path(valid_folder).mkdir(exist_ok=True)
-    valid_filename = sanitize_filename(filename)
+    img_filename = url.split('/')[-1]
+    valid_filename = sanitize_filename(f"{img_filename}")
     full_path = os.path.join(valid_folder, valid_filename)
     if not Path(full_path).exists():
         response = requests.get(url)
@@ -54,48 +97,55 @@ def download_image(url, filename, folder='images/'):
     return full_path
 
 
+def save_comments(filename, comments, folder='comments/'):
+    """
+    Сохраняем комментарии в файл
+    """
+
+    if not comments:
+        return None
+    valid_folder = sanitize_filepath(folder)
+    Path(valid_folder).mkdir(exist_ok=True)
+    valid_filename = sanitize_filename(f"{filename}_comments.txt")
+    full_path = os.path.join(valid_folder, valid_filename)
+    with open(full_path, "w") as file:
+        file.writelines(comments)
+    return full_path
+
+
+def save_genres(filename, genres, folder='genres/'):
+    """
+    Сохраняем список жанров книги в файл
+    """
+
+    valid_folder = sanitize_filepath(folder)
+    Path(valid_folder).mkdir(exist_ok=True)
+    valid_filename = sanitize_filename(f"{filename}_genress.txt")
+    full_path = os.path.join(valid_folder, valid_filename)
+    with open(full_path, "w") as file:
+        file.writelines(genres)
+    return full_path
+
+
 def main():
-    lib_url = "https://tululu.org/txt.php"
+    lib_url = "https://tululu.org" #/txt.php"
     for id in range(1, 11):
-        url = f"{lib_url}?id={id}"
-        page_url = f"https://tululu.org/b{id}"
-        page_response = requests.get(page_url)
-        page_response.raise_for_status()
-        soup = BeautifulSoup(page_response.text, "lxml")
-        about_book = soup.find('td', class_='ow_px_td').find("h1").text
+        text_url = urljoin(lib_url, f"txt.php?id={id}")
+        page_url = urljoin(lib_url, f"b{id}/")
         try:
-            title, author = about_book.split(sep='::')
-        except ValueError:
+            book_info = parse_book_page(page_url)
+        except requests.HTTPError:
             continue
-        stripped_title = title.strip()
-        stripped_author = author.strip()
-        filename = f"{id}. {stripped_title}"
-        # try:
-        #     book_name = download_txt(url, filename)
-        # except requests.HTTPError:
-        #     continue
-        rel_url = soup.find("div", class_="bookimage").find("img")['src']
-        img_url = urljoin(page_url, rel_url)
-        img_filename = rel_url.split('/')[-1]
-        # book_cover = download_image(img_url, img_filename)
-        comments = soup.find_all("div", class_="texts")
-        comments_text = []
-        for comment in comments:
-            comment_text = comment.find("span", class_="black").text
-            comments_text.append(comment_text)
-            # print(comment_text)
-        Path("comments").mkdir(exist_ok=True)
-        comm_file_name = f"{id}. comments.txt"
-        comments_name = os.path.join("comments", comm_file_name)
-        if comments_text:
-            with open(comments_name, "w") as file:
-                file.writelines(comments_text)
-        raw_genres = soup.find("span", class_="d_book").find_all("a")
-        genres = []
-        for genre in raw_genres:
-            genres.append(genre.text)
-        print(filename)
-        print(genres)
+        title = book_info["title"]
+        filename = f"{id}. {title}"
+        cover_path = download_image(book_info["cover_url"])
+        comments_path = save_comments(filename, book_info["comments"])
+        genres_path = save_genres(filename, book_info["genres"])
+
+        try:
+            book_name = download_txt(text_url, filename)
+        except requests.HTTPError:
+            continue
 
 
 if __name__ == "__main__":
