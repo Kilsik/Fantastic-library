@@ -132,13 +132,13 @@ def main():
     parser = argparse.ArgumentParser(
         description="Скачивает информацию о книгах и их текст"
         )
-    parser.add_argument("from_id",
+    parser.add_argument("start_id",
         help="Начало диапазона идентификаторов скачиваемых книг")
-    parser.add_argument("to_id",
+    parser.add_argument("end_id",
         help="Конец диапазона индентификаторов скачиваемых книг (книга с этим идентификатором скачана не будет)")
     id_range = parser.parse_args()
-    from_id = int(id_range.from_id)
-    to_id = int(id_range.to_id)
+    from_id = int(id_range.start_id)
+    to_id = int(id_range.end_id)
 
     lib_url = "https://tululu.org"
     for id in range(from_id, to_id):
