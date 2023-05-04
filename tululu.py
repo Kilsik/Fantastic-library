@@ -1,5 +1,6 @@
 import requests
 import os
+import argparse
 
 from pathlib import Path
 from bs4 import BeautifulSoup
@@ -128,8 +129,19 @@ def save_genres(filename, genres, folder='genres/'):
 
 
 def main():
-    lib_url = "https://tululu.org" #/txt.php"
-    for id in range(1, 11):
+    parser = argparse.ArgumentParser(
+        description="Скачивает информацию о книгах и их текст"
+        )
+    parser.add_argument("from_id",
+        help="Начало диапазона идентификаторов скачиваемых книг")
+    parser.add_argument("to_id",
+        help="Конец диапазона индентификаторов скачиваемых книг (книга с этим идентификатором скачана не будет)")
+    id_range = parser.parse_args()
+    from_id = int(id_range.from_id)
+    to_id = int(id_range.to_id)
+
+    lib_url = "https://tululu.org"
+    for id in range(from_id, to_id):
         text_url = urljoin(lib_url, f"txt.php?id={id}")
         page_url = urljoin(lib_url, f"b{id}/")
         try:
