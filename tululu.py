@@ -60,9 +60,7 @@ def check_for_redirect(response):
 
     if response.history:
         raise requests.HTTPError()
-    else:
-        return
-
+    
 
 def download_txt(url, page, filename, folder="books/"):
     """Скачиваем текстовые файлы.
@@ -144,7 +142,7 @@ def main():
         help="Конец диапазона индентификаторов скачиваемых книг (книга с этим идентификатором скачана не будет)")
     id_range = parser.parse_args()
     
-    lib_url = "https://tululu.org"
+    lib_url = "https://tululu.org/"
     start = id_range.start_id
     finish = id_range.end_id
     while start < finish:
@@ -157,19 +155,19 @@ def main():
                 try:
                     page_response = get_book_page(page_url)
                 except requests.HTTPError as err:
-                    logging.exception("Настранице нет книги", exc_info=False)
+                    logging.exception(f"На странице {page} нет книги", exc_info=False)
                     continue
                 about_book = parse_book_page(page_response)
                 title = about_book["title"]
                 filename = f"{page}. {title}"
-                cover_path = download_image(urljoin(lib_url, about_book["cover_url"]))
                 if about_book["comments"]:
                     comments_path = save_comments(filename, about_book["comments"])
                 genres_path = save_genres(filename, about_book["genres"])
 
                 try:
+                    cover_path = download_image(urljoin(page_url, about_book["cover_url"]))
                     book_namepath = download_txt(url, page, filename)
-                except requests.HTTPError:
+                except requests.HTTPError as err:
                     logging.exception(f'В библиотеке нет текста книги "{title}"',
                         exc_info=False)
                     continue
