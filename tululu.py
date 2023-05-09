@@ -142,7 +142,7 @@ def main():
         help="Конец диапазона индентификаторов скачиваемых книг (книга с этим идентификатором скачана не будет)")
     id_range = parser.parse_args()
     
-    lib_url = "https://tululu.org/"
+    lib_url = "https://tululu.org"
     start = id_range.start_id
     finish = id_range.end_id
     while start < finish:
