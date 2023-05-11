@@ -23,21 +23,22 @@ def parse_book_page(soup):
     Собираем информацию о книге
     """
 
-    about_book = soup.find("td", class_="ow_px_td").find("h1").text
+    about_book_selector = '.ow_px_td h1'
+    about_book = soup.select_one(about_book_selector).text
     raw_title, raw_author = about_book.split(sep="::")
 
     title = raw_title.strip()
     author = raw_author.strip()
     
-    img_url = soup.find("div", class_="bookimage").find("img")["src"]
+    img_selector = ".bookimage img"
+    img_url = soup.select_one(img_selector)["src"]
 
-    raw_comments = soup.find_all("div", class_="texts")
-    comments = []
-    for comment in raw_comments:
-        comment_text = comment.find("span", class_="black").text
-        comments.append(comment_text)
+    comments_selector = ".texts .black"
+    raw_comments = soup.select(comments_selector)
+    comments = [comment.text for comment in raw_comments]
     
-    raw_genres = soup.find("span", class_="d_book").find_all("a")
+    genres_selector = "span.d_book a"
+    raw_genres = soup.select(genres_selector)
     genres = [genre.text for genre in raw_genres]
 
     return {
@@ -97,16 +98,19 @@ def main():
         response = requests.get(page_url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
-        about_books = soup.find_all('table', class_='d_book')
+        all_books_selector = ".d_book"
+        about_books = soup.select(all_books_selector)
         for book in about_books:
-            # book_title = 
-            book_url = urljoin(fantastic_url, book.find('a')['href'])
+            url_selector = 'a[href]'
+            raw_book_url = book.select_one(url_selector)
+            book_url = urljoin(fantastic_url, raw_book_url['href'])
             book_response = get_book_page(book_url)
             book_soup = BeautifulSoup(book_response.text, 'lxml')
             about_book = parse_book_page(book_soup)
             title = about_book['title']
+            book_selector = ".d_book a[title$='скачать книгу txt']"
             try:
-                rel_txt_url = book_soup.find('table', class_='d_book').find('a', string='скачать txt')['href']
+                rel_txt_url = book_soup.select_one(book_selector)['href']
             except TypeError:
                 print(f'В библиотеке нет текста книги {title}')
                 continue
@@ -117,7 +121,6 @@ def main():
             book_namepath = download_txt(txt_url, txt_filename)
             cover_path = download_image(img_url)
             books_description.append(about_book)
-    books_description_json = json.dumps(books_description, ensure_ascii=False).encode('utf-8')
     with open('books_description.json', 'w', encoding='utf-8') as json_file:
         json.dump(books_description, json_file, ensure_ascii=False)
 
