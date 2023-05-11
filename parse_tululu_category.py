@@ -12,6 +12,50 @@ from urllib.parse import urljoin, urlsplit
 from pathvalidate import sanitize_filepath, sanitize_filename
 
 
+def create_parser():
+    """
+    Создаем парсер с аргументами
+    """
+
+    parser = argparse.ArgumentParser(
+    description="Скачивает информацию о книгах и их текст"
+    )
+    parser.add_argument(
+        "--start_page",
+        type=int,
+        default=1,
+        help="Начало диапазона идентификаторов скачиваемых книг"
+    )
+    parser.add_argument(
+        "--end_page",
+        type=int,
+        default=1000000,
+        help="Конец диапазона индентификаторов скачиваемых книг (книга с этим идентификатором скачана не будет)"
+    )
+    parser.add_argument(
+        "--dest_folder",
+        help="Путь к каталогу с результатами парсинга: картинкам, книгам, JSON"
+    )
+    parser.add_argument(
+        "--skip_imgs",
+        action='store_true',
+        default=False,
+        help="При наличии этого параметра не будут скачиваться обложки книг"
+    )
+    parser.add_argument(
+        "--skip_txt",
+        action='store_true',
+        default=False,
+        help="При указании этого параметра не будут скачиваться тексты книг"
+    )
+    parser.add_argument(
+        "--json_path",
+        default='books_descriptions.json',
+        help="Файл с описанием книг. По умолчанию 'books_descriptions.json'"
+    )
+    return parser
+
+
 def get_book_page(url):
     """
     Получаем страницу книги
@@ -54,7 +98,7 @@ def parse_book_page(soup):
     }
 
 
-def download_txt(url, filename, folder="books/"):
+def download_txt(url, filename, folder):
     """Скачиваем текстовые файлы.
     Args:
         url (str): Cсылка на текст, который хочется скачать.
@@ -66,25 +110,23 @@ def download_txt(url, filename, folder="books/"):
 
     response = requests.get(url)
     response.raise_for_status()
-    valid_folder = sanitize_filepath(folder)
-    Path(valid_folder).mkdir(exist_ok=True)
+    Path(folder).mkdir(parents=True, exist_ok=True)
     valid_filename = sanitize_filename(filename)
-    full_path = os.path.join(valid_folder, valid_filename)
+    full_path = os.path.join(folder, valid_filename)
     with open(full_path, "w", encoding="utf-8") as file:
         file.write(response.text)
     return full_path
 
 
-def download_image(url, folder="images/"):
+def download_image(url, folder):
     """
     Скачиваем изображения обложек книг
     """
 
-    valid_folder = sanitize_filepath(folder)
-    Path(valid_folder).mkdir(exist_ok=True)
+    Path(folder).mkdir(parents=True, exist_ok=True)
     img_filename = url.split("/")[-1]
     valid_filename = sanitize_filename(f"{img_filename}")
-    full_path = os.path.join(valid_folder, valid_filename)
+    full_path = os.path.join(folder, valid_filename)
     if not Path(full_path).exists():
         response = requests.get(url)
         response.raise_for_status()
@@ -103,16 +145,14 @@ def check_for_redirect(response):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-    description="Скачивает информацию о книгах и их текст"
-        )
-    parser.add_argument("--start_page", type=int, default=1,
-        help="Начало диапазона идентификаторов скачиваемых книг")
-    parser.add_argument("--end_page", type=int, default=1000000,
-        help="Конец диапазона индентификаторов скачиваемых книг (книга с этим идентификатором скачана не будет)")
-    id_range = parser.parse_args()
-    start_page = id_range.start_page
-    end_page = id_range.end_page
+    parser = create_parser()
+    args = parser.parse_args()
+    start_page = args.start_page
+    end_page = args.end_page
+    folder = sanitize_filepath(args.dest_folder) if args.dest_folder else ''
+    skip_imgs = args.skip_imgs
+    skip_txt = args.skip_txt
+    json_path = os.path.join(folder, sanitize_filename(args.json_path))
 
     if start_page > end_page:
         print("Номер начальной страницы не может больше номера последней")
@@ -169,8 +209,12 @@ def main():
                     _, book_num = urlsplit(txt_url)[3].split('=')
                     txt_filename = f'{book_num}. {title}.txt'
                     img_url = urljoin(book_url, about_book['img_scr'])
-                    book_namepath = download_txt(txt_url, txt_filename)
-                    cover_path = download_image(img_url)
+                    if not skip_txt:
+                        book_folder = os.path.join(folder, 'books/')
+                        book_namepath = download_txt(txt_url, txt_filename, book_folder)
+                    if not skip_imgs:
+                        img_folder = os.path.join(folder, 'images/')
+                        cover_path = download_image(img_url, img_folder)
                     books_description.append(about_book)
                     print(book_url)
         except requests.ConnectionError as err:
@@ -178,7 +222,10 @@ def main():
             print(err)
             start = page
             time.sleep(180)
-    with open('books_description.json', 'w', encoding='utf-8') as json_file:
+    if folder:
+        Path(folder).mkdir(parents=True, exist_ok=True)
+    with open(json_path, 'a', encoding='utf-8') as json_file:
+        json_file.seek(0, 2)
         json.dump(books_description, json_file, ensure_ascii=False)
 
 
