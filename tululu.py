@@ -21,33 +21,33 @@ def get_book_page(url):
     return page_response
 
 
-def parse_book_page(page_response):
+def parse_book_page(soup):
     """
     Собираем информацию о книге
     """
 
-    soup = BeautifulSoup(page_response.text, "lxml")
-    about_book = soup.find("td", class_="ow_px_td").find("h1").text
+    about_book_selector = '.ow_px_td h1'
+    about_book = soup.select_one(about_book_selector).text
     raw_title, raw_author = about_book.split(sep="::")
 
     title = raw_title.strip()
     author = raw_author.strip()
     
-    img_url = soup.find("div", class_="bookimage").find("img")["src"]
+    img_selector = ".bookimage img"
+    img_url = soup.select_one(img_selector)["src"]
 
-    raw_comments = soup.find_all("div", class_="texts")
-    comments = []
-    for comment in raw_comments:
-        comment_text = comment.find("span", class_="black").text
-        comments.append(comment_text)
+    comments_selector = ".texts .black"
+    raw_comments = soup.select(comments_selector)
+    comments = [comment.text for comment in raw_comments]
     
-    raw_genres = soup.find("span", class_="d_book").find_all("a")
+    genres_selector = "span.d_book a"
+    raw_genres = soup.select(genres_selector)
     genres = [genre.text for genre in raw_genres]
 
     return {
         "title": title,
         "author": author,
-        "cover_url": img_url,
+        "img_scr": img_url,
         "comments": comments,
         "genres": genres
     }
@@ -62,7 +62,7 @@ def check_for_redirect(response):
         raise requests.HTTPError()
     
 
-def download_txt(url, page, filename, folder="books/"):
+def download_txt(url, filename, folder):
     """Скачиваем текстовые файлы.
     Args:
         url (str): Cсылка на текст, который хочется скачать.
@@ -72,30 +72,26 @@ def download_txt(url, page, filename, folder="books/"):
         str: Путь до файла, куда сохранён текст.
     """
 
-    param = {"id": page}
-    response = requests.get(url, params=param)
+    response = requests.get(url)
     response.raise_for_status()
-    check_for_redirect(response)
-    valid_folder = sanitize_filepath(folder)
-    Path(valid_folder).mkdir(exist_ok=True)
-    text_filename = sanitize_filename(filename)
-    valid_filename = f"{text_filename}.txt"
-    full_path = os.path.join(valid_folder, valid_filename)
+    Path(folder).mkdir(parents=True, exist_ok=True)
+    valid_filename = sanitize_filename(filename)
+    full_path = os.path.join(folder, valid_filename)
     with open(full_path, "w", encoding="utf-8") as file:
         file.write(response.text)
     return full_path
+
     
 
-def download_image(url, folder="images/"):
+def download_image(url, folder):
     """
     Скачиваем изображения обложек книг
     """
 
-    valid_folder = sanitize_filepath(folder)
-    Path(valid_folder).mkdir(exist_ok=True)
+    Path(folder).mkdir(parents=True, exist_ok=True)
     img_filename = url.split("/")[-1]
     valid_filename = sanitize_filename(f"{img_filename}")
-    full_path = os.path.join(valid_folder, valid_filename)
+    full_path = os.path.join(folder, valid_filename)
     if not Path(full_path).exists():
         response = requests.get(url)
         response.raise_for_status()
@@ -157,16 +153,25 @@ def main():
                 except requests.HTTPError as err:
                     logging.exception(f"На странице {page} нет книги", exc_info=False)
                     continue
-                about_book = parse_book_page(page_response)
+                soup = BeautifulSoup(page_response.text, "lxml")
+                about_book = parse_book_page(soup)
                 title = about_book["title"]
                 filename = f"{page}. {title}"
+                txt_selector = ".d_book a[title$='скачать книгу txt']"
+                try:
+                    rel_txt_url = soup.select_one(txt_selector)["href"]
+                except TypeError:
+                        print(f'В библиотеке нет текста книги {title}')
+                        continue
+                txt_url = urljoin(page_url, rel_txt_url)
+
                 if about_book["comments"]:
                     comments_path = save_comments(filename, about_book["comments"])
                 genres_path = save_genres(filename, about_book["genres"])
 
                 try:
-                    cover_path = download_image(urljoin(page_url, about_book["cover_url"]))
-                    book_namepath = download_txt(url, page, filename)
+                    cover_path = download_image(urljoin(page_url, about_book["img_scr"]), "images/")
+                    book_namepath = download_txt(txt_url, filename, "books/")
                 except requests.HTTPError as err:
                     logging.exception(f'В библиотеке нет текста книги "{title}"',
                         exc_info=False)
