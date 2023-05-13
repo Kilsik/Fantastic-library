@@ -74,6 +74,7 @@ def download_txt(url, filename, folder):
 
     response = requests.get(url)
     response.raise_for_status()
+    check_for_redirect(response)
     Path(folder).mkdir(parents=True, exist_ok=True)
     valid_filename = sanitize_filename(filename)
     full_path = os.path.join(folder, valid_filename)
@@ -95,6 +96,7 @@ def download_image(url, folder):
     if not Path(full_path).exists():
         response = requests.get(url)
         response.raise_for_status()
+        check_for_redirect(response)
         with open(full_path, "wb") as file:
             file.write(response.content)
     return full_path
