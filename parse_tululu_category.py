@@ -86,12 +86,16 @@ def main():
     start = start_page
     finish = end_page
 
-    try:
-        last_page_response = requests.get(fantastic_url)
-        last_page_response.raise_for_status()
-    except requests.ConnectionError as err:
-        logging.exception("Проверьте соединение с сетью", exc_info=False)
-        print(err)
+    trying = True
+    while trying:
+        try:
+            last_page_response = requests.get(fantastic_url)
+            last_page_response.raise_for_status()
+            trying = False
+        except requests.ConnectionError as err:
+            logging.exception("Проверьте соединение с сетью", exc_info=False)
+            print(err)
+            time.sleep(180)
     soup = BeautifulSoup(last_page_response.text, 'lxml')    
     num_pages_selector = ".ow_px_td .center .npage"
     num_pages = soup.select(num_pages_selector)[-1]
@@ -119,34 +123,44 @@ def main():
                     all_books_selector = ".d_book"
                     about_books = soup.select(all_books_selector)
                     for book in about_books:
-                        url_selector = 'a[href]'
-                        raw_book_url = book.select_one(url_selector)
-                        book_url = urljoin(fantastic_url, raw_book_url['href'])
-                        book_response = requests.get(book_url)
-                        book_response.raise_for_status()
-                        check_for_redirect(book_response)
-                    
-                        book_soup = BeautifulSoup(book_response.text, 'lxml')
-                        about_book = parse_book_page(book_soup)
-                        title = about_book['title']
-                        book_selector = ".d_book a[title$='скачать книгу txt']"
+                        trying = True
+                        while trying:
+                            try:
+                                url_selector = 'a[href]'
+                                raw_book_url = book.select_one(url_selector)
+                                book_url = urljoin(fantastic_url, raw_book_url['href'])
+                                book_response = requests.get(book_url)
+                                book_response.raise_for_status()
+                                check_for_redirect(book_response)
+                            
+                                book_soup = BeautifulSoup(book_response.text, 'lxml')
+                                about_book = parse_book_page(book_soup)
+                                title = about_book['title']
+                                book_selector = ".d_book a[title$='скачать книгу txt']"
 
-                        if not book_soup.select_one(book_selector):
-                            print(f'В библиотеке нет текста книги "{title}"')
-                            continue
-                        rel_txt_url = book_soup.select_one(book_selector)['href']
+                                if not book_soup.select_one(book_selector):
+                                    print(f'В библиотеке нет текста книги "{title}"')
+                                    trying = False
+                                    continue
+                                rel_txt_url = book_soup.select_one(book_selector)['href']
 
-                        txt_url = urljoin(book_url, rel_txt_url)
-                        _, book_num = urlsplit(txt_url)[3].split('=')
-                        txt_filename = f'{book_num}. {title}.txt'
-                        img_url = urljoin(book_url, about_book['img_scr'])
-                        if not skip_txt:
-                            book_folder = os.path.join(folder, 'books/')
-                            book_namepath = download_txt(txt_url, txt_filename, book_folder)
-                        if not skip_imgs:
-                            img_folder = os.path.join(folder, 'images/')
-                            cover_path = download_image(img_url, img_folder)
-                except requests.HTTPError:
+                                txt_url = urljoin(book_url, rel_txt_url)
+                                _, book_num = urlsplit(txt_url)[3].split('=')
+                                txt_filename = f'{book_num}. {title}.txt'
+                                img_url = urljoin(book_url, about_book['img_scr'])
+                                if not skip_txt:
+                                    book_folder = os.path.join(folder, 'books/')
+                                    book_namepath = download_txt(txt_url, txt_filename, book_folder)
+                                if not skip_imgs:
+                                    img_folder = os.path.join(folder, 'images/')
+                                    cover_path = download_image(img_url, img_folder)
+                                trying = False
+                            except requests.ConnectionError as err:
+                                logging.exception("Проверьте соединение с сетью", exc_info=False)
+                                print(err)
+                                time.sleep(180)
+                except requests.HTTPError as err:
+                    print("Запрашиваемый объект отсутствует\n", err)
                     continue
                 books_descriptions.append(about_book)
         except requests.ConnectionError as err:
