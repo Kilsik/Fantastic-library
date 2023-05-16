@@ -155,6 +155,7 @@ def main():
                                     img_folder = os.path.join(folder, 'images/')
                                     cover_path = download_image(img_url, img_folder)
                                 trying = False
+                                books_descriptions.append(about_book)
                             except requests.ConnectionError as err:
                                 logging.exception("Проверьте соединение с сетью", exc_info=False)
                                 print(err)
@@ -162,7 +163,6 @@ def main():
                 except requests.HTTPError as err:
                     print("Запрашиваемый объект отсутствует\n", err)
                     continue
-                books_descriptions.append(about_book)
         except requests.ConnectionError as err:
             logging.exception("Проверьте соединение с сетью", exc_info=False)
             print(err)
