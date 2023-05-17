@@ -1,4 +1,5 @@
 import json
+import numpy
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
@@ -18,9 +19,11 @@ def reload_index():
     with open('books_descriptions.json', 'r', encoding='utf-8') as books_file:
         books_json = books_file.read()
     books = json.loads(books_json)
+    count_rows = len(books)/2
+    rows_books = numpy.array_split(books, count_rows)
 
     rendered_page = template.render(
-        books = books
+        books = rows_books
     )
 
     with open('index.html', 'w', encoding="utf8") as file:
