@@ -11,30 +11,41 @@
     <title>Библиотека научной фантастики</title>
   </head>
   <body>
-    <div class="container">
-      {% for books_row in books %}
-        <div class="row">
-          {% for book in books_row %}
-            <div class="col">
-              <div class="card mb-3" style="max-width: 540px;">
-                <div class="row no-gutters">
-                  <div class="col-md-4">
-                    <img src="../{{ book.img_scr|urlencode }}" class="card-img" alt="{{ book.title }}">
-                  </div>
-                  <div class="col-md-8">
-                    <div class="card-body">
-                      <h5 class="card-title">{{ book.title }}</h5>
-                      <p class="card-text">{{ book.author }}</p>
-                      <a href="../{{ book.txt_path|urlencode }}">Читать</a>
+    <div class="m-3">
+      <div class="container">
+        <nav aria-label="Page navigation example">
+          <ul class="pagination">
+            <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+            <li class="page-item"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item"><a class="page-link" href="#">Next</a></li>
+          </ul>
+        </nav>
+        {% for books_row in books %}
+          <div class="row">
+            {% for book in books_row %}
+              <div class="col">
+                <div class="card mb-3" style="max-width: 540px;">
+                  <div class="row no-gutters">
+                    <div class="col-md-4">
+                      <img src="../{{ book.img_scr|urlencode }}" class="card-img" alt="{{ book.title }}">
+                    </div>
+                    <div class="col-md-8">
+                      <div class="card-body">
+                        <h5 class="card-title">{{ book.title }}</h5>
+                        <p class="card-text">{{ book.author }}</p>
+                        <a href="../{{ book.txt_path|urlencode }}">Читать</a>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          {% endfor %}
+            {% endfor %}
+          </div>
+        {% endfor %}
         </div>
-      {% endfor %}
-      </div>
+    </div>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
