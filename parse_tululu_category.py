@@ -150,10 +150,11 @@ def main():
                                 img_url = urljoin(book_url, about_book['img_scr'])
                                 if not skip_txt:
                                     book_folder = os.path.join(folder, 'books/')
-                                    book_namepath = download_txt(txt_url, txt_filename, book_folder)
+                                    about_book["txt_path"] = download_txt(txt_url, txt_filename, book_folder)
+                                    print(about_book["txt_path"])
                                 if not skip_imgs:
                                     img_folder = os.path.join(folder, 'images/')
-                                    cover_path = download_image(img_url, img_folder)
+                                    about_book["img_scr"] = download_image(img_url, img_folder)
                                 trying = False
                                 books_descriptions.append(about_book)
                             except requests.ConnectionError as err:
