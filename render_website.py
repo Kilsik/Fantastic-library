@@ -19,7 +19,7 @@ template = env.get_template('template.html')
 
 def reload_index(k):
     print(k)
-    with open('books_descriptions.json', 'r', encoding='utf-8') as books_file:
+    with open('media/books_descriptions.json', 'r', encoding='utf-8') as books_file:
         books_json = books_file.read()
 
     os.makedirs('pages', exist_ok=True)
