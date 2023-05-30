@@ -1,9 +1,11 @@
 import json
 import os
 import math
+import shutil
 
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from livereload import Server
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from more_itertools import chunked
@@ -17,11 +19,10 @@ template = env.get_template('template.html')
 
 
 
-def reload_index(k):
-    print(k)
+def reload_index():
     with open('media/books_descriptions.json', 'r', encoding='utf-8') as books_file:
         books_json = books_file.read()
-
+    shutil.rmtree("pages")
     os.makedirs('pages', exist_ok=True)
     books = json.loads(books_json)
     books_per_page = 20
@@ -41,4 +42,7 @@ def reload_index(k):
 
 
 if __name__ == '__main__':
-    main()
+    reload_index()
+    server = Server()
+    server.watch('template.html', reload_index)
+    server.serve(root='.')

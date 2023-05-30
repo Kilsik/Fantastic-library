@@ -45,7 +45,7 @@ python parse_tululu_categoty.py --start_page 100 --end_page 111 --dest_folder li
 ### Наполнение оффлайн-библиотеки
 Скачанные книги их json-файл с их описанием положите в папку media. Для формирования новых страниц библиотеки используйте команду
 ```
-$ python run_server.py
+$ python render_website.py
 ```
 После этого Ваша библиотека будет доступна даже в отсутствии сети Интернет по адресу [http://127.0.0.1:5500/pages/index1.html](http://127.0.0.1:5500/pages/index1.html)
 
