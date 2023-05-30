@@ -10,16 +10,17 @@ from livereload import Server
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from more_itertools import chunked
 
-env = Environment(
-    loader=FileSystemLoader('.'),
-    autoescape=select_autoescape(['html', 'xml'])
-)
-
-template = env.get_template('template.html')
-
 
 
 def reload_index():
+    env = Environment(
+    loader=FileSystemLoader('.'),
+    autoescape=select_autoescape(['html', 'xml'])
+    )
+
+    template = env.get_template('template.html')
+
+
     with open('media/books_descriptions.json', 'r', encoding='utf-8') as books_file:
         books_json = books_file.read()
     shutil.rmtree("pages")
