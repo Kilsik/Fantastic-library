@@ -45,7 +45,7 @@
                 <div class="card mb-3" style="max-width: 540px;">
                   <div class="row no-gutters">
                     <div class="col-md-4">
-                      <img src="../media/{{ book.img_scr|urlencode }}" class="card-img" alt="{{ book.title }}">
+                      <img src="../{{ folder }}/{{ book.img_scr|urlencode }}" class="card-img" alt="{{ book.title }}">
                     </div>
                     <div class="col-md-8">
                       <div class="card-body">
@@ -55,7 +55,7 @@
                           <span class="badge badge-light">{{ genre }}</span>
                         {% endfor %}
                         <div class="pt-3">
-                          <p class="text"><a href="../media/{{ book.txt_path|urlencode }}">Читать</a></p>
+                          <p class="text"><a href="../{{ folder }}/{{ book.txt_path|urlencode }}">Читать</a></p>
                         </div>
                       </div>
                     </div>

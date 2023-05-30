@@ -2,6 +2,7 @@ import json
 import os
 import math
 import shutil
+import argparse
 
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
@@ -20,8 +21,8 @@ def reload_index():
 
     template = env.get_template('template.html')
 
-
-    with open('media/books_descriptions.json', 'r', encoding='utf-8') as books_file:
+    *folder, file_name = os.path.split(register)
+    with open(register, 'r', encoding='utf-8') as books_file:
         books_json = books_file.read()
     shutil.rmtree("pages")
     os.makedirs('pages', exist_ok=True)
@@ -35,7 +36,8 @@ def reload_index():
         rendered_page = template.render(
             books = rows_books,
             current_page = page,
-            count_pages = count_pages
+            count_pages = count_pages,
+            folder = folder[0]
         )
 
         with open(f'pages/index{page}.html', 'w', encoding="utf8") as file:
@@ -43,6 +45,18 @@ def reload_index():
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        description="Запуск онлайн-библиотеки"
+        )
+    parser.add_argument(
+        "--reg",
+        help="Путь и имя json-файла с описание книг, по умолчанию media/books_descriptions.json",
+        default="media/books_descriptions.json"
+        )
+    args = parser.parse_args()
+    global register
+    register = args.reg
     reload_index()
     server = Server()
     server.watch('template.html', reload_index)
