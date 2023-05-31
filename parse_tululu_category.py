@@ -45,7 +45,7 @@ def create_parser():
     )
     parser.add_argument(
         "--skip_imgs",
-        action='store_true',
+        action="store_true",
         default=False,
         help="При наличии этого параметра не будут скачиваться обложки книг"
     )
@@ -68,7 +68,7 @@ def main():
     args = parser.parse_args()
     start_page = args.start_page
     end_page = args.end_page
-    folder = sanitize_filepath(args.dest_folder) if args.dest_folder else ''
+    folder = sanitize_filepath(args.dest_folder) if args.dest_folder else ""
     skip_imgs = args.skip_imgs
     skip_txt = args.skip_txt
     json_path = os.path.join(folder, sanitize_filename(args.json_path))
@@ -80,7 +80,7 @@ def main():
     if start_page == end_page:
         end_page += 1
 
-    fantastic_url = 'https://tululu.org/l55/'
+    fantastic_url = "https://tululu.org/l55/"
     books_descriptions = []
     start = start_page
     finish = end_page

@@ -26,7 +26,7 @@ def parse_book_page(soup):
     Собираем информацию о книге
     """
 
-    about_book_selector = '.ow_px_td h1'
+    about_book_selector = ".ow_px_td h1"
     about_book = soup.select_one(about_book_selector).text
     raw_title, raw_author = about_book.split(sep="::")
 
@@ -163,7 +163,7 @@ def main():
                 try:
                     rel_txt_url = soup.select_one(txt_selector)["href"]
                 except TypeError:
-                        print(f'В библиотеке нет текста книги {title}')
+                        print(f"В библиотеке нет текста книги {title}")
                         continue
                 txt_url = urljoin(page_url, rel_txt_url)
 
