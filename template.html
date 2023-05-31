@@ -9,12 +9,14 @@
     <link rel="stylesheet" href="/static/bootstrap.min.css" crossorigin="anonymous">
 
     <title>Библиотека научной фантастики</title>
+    <link rel="icon" href="../static/favicon.ico">
   </head>
   <body>
     <div class="mt-5">
       <div class="container">
         <nav aria-label="Page navigation example">
-          <ul class="pagination">
+          
+          <ul class="pagination justify-content-center">
             {% if current_page == 1 %}
               <li class="page-item disabled"><a class="page-link" tabindex="-1" aria-disabled="true">Назад</a></li>
             {% else %}
@@ -55,7 +57,7 @@
                           <span class="badge badge-light">{{ genre }}</span>
                         {% endfor %}
                         <div class="pt-3">
-                          <p class="text"><a href="../{{ folder }}/{{ book.txt_path|urlencode }}">Читать</a></p>
+                          <p class="text"><a href="../{{ folder }}/{{ book.txt_path|urlencode }}" target="_blank">Читать</a></p>
                         </div>
                       </div>
                     </div>
