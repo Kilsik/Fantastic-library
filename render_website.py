@@ -29,15 +29,15 @@ def reload_index(register):
     shutil.rmtree("pages")
     os.makedirs("pages", exist_ok=True)
     books_per_page = 20
-    count_pages = math.ceil(len(books) / books_per_page)
+    pages_count = math.ceil(len(books) / books_per_page)
     books_on_page = chunked(books, books_per_page)
     columns_count = 2
     for page, page_books in enumerate(books_on_page, 1):
-        rows_books = chunked(page_books, columns_count)
+        books_rows = chunked(page_books, columns_count)
         rendered_page = template.render(
-            books=rows_books,
+            books=books_rows,
             current_page=page,
-            count_pages=count_pages,
+            pages_count=pages_count,
             folder=get_media_root(register)
         )
 
