@@ -16,7 +16,18 @@ def get_media_root(register):
     return folder
 
 
-def reload_index(register):
+def reload_index():
+    parser = argparse.ArgumentParser(
+        description="Запуск онлайн-библиотеки"
+        )
+    parser.add_argument(
+        "--reg",
+        help="Путь и имя json-файла с описанием книг, по умолчанию media/books_descriptions.json",
+        default="media/books_descriptions.json"
+        )
+    args = parser.parse_args()
+    register = args.reg
+
     env = Environment(
         loader=FileSystemLoader("."),
         autoescape=select_autoescape(["html", "xml"])
@@ -46,16 +57,7 @@ def reload_index(register):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Запуск онлайн-библиотеки"
-        )
-    parser.add_argument(
-        "--reg",
-        help="Путь и имя json-файла с описанием книг, по умолчанию media/books_descriptions.json",
-        default="media/books_descriptions.json"
-        )
-    args = parser.parse_args()
-    reload_index(args.reg)
+    reload_index()
     server = Server()
     server.watch("template.html", reload_index)
     server.serve(root=".")
